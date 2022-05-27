@@ -17,21 +17,46 @@ const main=async()=>{
     const taskSchema= new mongoose.Schema({
         task:String,
         description:String,
-        date:String,
-        email:String
+        initialDate:String,
+        dateLine:String,
+        email:String,
+        status:Boolean
     })
     const Tasks= new mongoose.model('Task',taskSchema)
     //get all tasks
     app.get('/tasks',async(req,res)=>{
-        const result= await Tasks.find({})
+        const email=req.query.email
+        let tasks
+        if(email){
+            const individualsTasks= await Tasks.find({email})
+            tasks=individualsTasks
+        }else{
+            const allTasks= await Tasks.find({})
+            tasks=allTasks
+
+        }
+        res.send(tasks)
+    })
+    //get single task by id
+    app.get('/task/:id',async(req,res)=>{
+        const taskId=req.params.id
+        const result= await Tasks.findOne({_id:taskId})
         res.send(result)
     })
+    //task create
     app.post('/task',async(req,res)=>{
         const task=req.body
         const result = await new Tasks(task)
         result.save()
         res.send(result)
         //console.log(task)
+    })
+    //task completed
+    app.patch('/task/:id',async(req,res)=>{
+        const taskId=req.params.id
+        const status=req.body
+        const result= await Tasks.findOneAndUpdate({_id:taskId},{$set:status})
+        res.send(result)
     })
     //delete a task
     app.delete('/task/:id',async(req,res)=>{
